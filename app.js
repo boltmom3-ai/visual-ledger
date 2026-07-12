@@ -25,7 +25,6 @@ const MONTH_NAMES = [
 
 // --- App State ---
 let transactions = [];
-let monthlyBudget = 2000000; // Default budget (2,000,000 KRW)
 let categoryBudgets = {}; // Category-wise budgets
 let currentPeriod = new Date(); // Represents current year & month
 
@@ -39,16 +38,6 @@ const totalExpenseEl = document.getElementById('total-expense');
 const netBalanceEl = document.getElementById('net-balance');
 
 // Budget Elements
-const monthlyBudgetEl = document.getElementById('monthly-budget');
-const editBudgetBtn = document.getElementById('edit-budget-btn');
-const budgetDisplayGroup = document.getElementById('budget-display-group');
-const budgetInputGroup = document.getElementById('budget-input-group');
-const budgetEditInput = document.getElementById('budget-edit-input');
-const saveBudgetBtn = document.getElementById('save-budget-btn');
-const cancelBudgetBtn = document.getElementById('cancel-budget-btn');
-const budgetProgressContainer = document.getElementById('budget-progress-container');
-const budgetProgressBar = document.getElementById('budget-progress-bar');
-const budgetPercentageText = document.getElementById('budget-percentage-text');
 const categoryBudgetsList = document.getElementById('category-budgets-list');
 
 const transactionForm = document.getElementById('transaction-form');
@@ -87,7 +76,7 @@ function getCategoryInfo(type, id) {
 // Load data from LocalStorage
 function loadLocalStorage() {
     // Load transactions
-    const data = localStorage.getItem('visual_ledger_transactions_v3');
+    const data = localStorage.getItem('visual_ledger_transactions_v4');
     if (data) {
         try {
             transactions = JSON.parse(data).map(item => ({
@@ -100,20 +89,20 @@ function loadLocalStorage() {
         }
     } else {
         // Sample seed data to present on first load (KRW values)
+        const today = new Date();
         transactions = [
-            { id: 'seed-1', type: 'income', date: new Date(), category: 'salary', amount: 3500000, desc: 'Monthly Salary' },
-            { id: 'seed-2', type: 'expense', date: new Date(), category: 'food', amount: 15500, desc: 'Lunch at Cafe' },
-            { id: 'seed-3', type: 'expense', date: new Date(), category: 'transport', amount: 2700, desc: 'Subway Ride' },
-            { id: 'seed-4', type: 'expense', date: new Date(), category: 'shopping', amount: 79000, desc: 'Summer Shirt' },
-            { id: 'seed-5', type: 'expense', date: new Date(), category: 'housing', amount: 120000, desc: 'Internet & Phone Utilities' }
+            { id: 'seed-1', type: 'income', date: new Date(today.getFullYear(), today.getMonth(), 5), category: 'salary', amount: 3500000, desc: 'Monthly Salary' },
+            { id: 'seed-2', type: 'income', date: new Date(today.getFullYear(), today.getMonth(), 15), category: 'side-hustle', amount: 450000, desc: 'Freelance Design Work' },
+            { id: 'seed-3', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 2), category: 'housing', amount: 450000, desc: 'Monthly Studio Rent' },
+            { id: 'seed-4', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 3), category: 'food', amount: 120000, desc: 'Weekly Grocery Shopping' },
+            { id: 'seed-5', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 5), category: 'transport', amount: 45000, desc: 'Subway Pass Refill' },
+            { id: 'seed-6', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 6), category: 'shopping', amount: 95000, desc: 'Running Shoes' },
+            { id: 'seed-7', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 8), category: 'food', amount: 85000, desc: 'Dinner with Team' },
+            { id: 'seed-8', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 10), category: 'culture', amount: 28000, desc: 'Cinema Tickets' },
+            { id: 'seed-9', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 12), category: 'medical', amount: 12000, desc: 'Cold Medicine' },
+            { id: 'seed-10', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 14), category: 'expense-etc', amount: 55000, desc: 'Coffee Shop Study Sessions' }
         ];
         saveLocalStorage();
-    }
-
-    // Load budget
-    const savedBudget = localStorage.getItem('visual_ledger_monthly_budget');
-    if (savedBudget !== null) {
-        monthlyBudget = parseInt(savedBudget, 10) || 0;
     }
 
     // Load category budgets
@@ -143,11 +132,7 @@ function loadLocalStorage() {
 
 // Save data to LocalStorage
 function saveLocalStorage() {
-    localStorage.setItem('visual_ledger_transactions_v3', JSON.stringify(transactions));
-}
-
-function saveBudgetToLocalStorage() {
-    localStorage.setItem('visual_ledger_monthly_budget', monthlyBudget.toString());
+    localStorage.setItem('visual_ledger_transactions_v4', JSON.stringify(transactions));
 }
 
 function saveCategoryBudgetsToLocalStorage() {
@@ -173,7 +158,7 @@ function getFilteredTransactions() {
     return transactions.filter(t => t.date.getFullYear() === year && t.date.getMonth() === month);
 }
 
-// Update the Stats Dashboard Cards & Budget progress
+// Update the Stats Dashboard Cards
 function updateDashboard(periodTransactions) {
     let income = 0;
     let expense = 0;
@@ -198,29 +183,6 @@ function updateDashboard(periodTransactions) {
         netBalanceEl.style.color = 'var(--color-income)';
     } else {
         netBalanceEl.style.color = 'var(--text-primary)';
-    }
-
-    // Budget UI Calculation
-    monthlyBudgetEl.textContent = formatCurrency(monthlyBudget);
-
-    if (monthlyBudget > 0) {
-        budgetProgressContainer.style.display = 'block';
-        const percent = Math.min((expense / monthlyBudget) * 100, 100);
-        const displayPercent = Math.round((expense / monthlyBudget) * 100);
-        
-        budgetProgressBar.style.width = `${percent}%`;
-        budgetPercentageText.textContent = `${displayPercent}% of budget used`;
-
-        // Style progress bar based on utilization
-        if (percent < 70) {
-            budgetProgressBar.style.backgroundColor = 'var(--color-income)'; // Green
-        } else if (percent < 90) {
-            budgetProgressBar.style.backgroundColor = '#f97316'; // Orange
-        } else {
-            budgetProgressBar.style.backgroundColor = 'var(--color-expense)'; // Red
-        }
-    } else {
-        budgetProgressContainer.style.display = 'none';
     }
 }
 
@@ -449,41 +411,6 @@ function setupEventListeners() {
     // Search and Filter updates
     searchInput.addEventListener('input', render);
     filterTypeSelect.addEventListener('change', render);
-
-    // Budget Editing Events
-    editBudgetBtn.addEventListener('click', () => {
-        budgetDisplayGroup.style.display = 'none';
-        budgetInputGroup.style.display = 'flex';
-        budgetEditInput.value = monthlyBudget;
-        budgetEditInput.focus();
-        budgetEditInput.select();
-    });
-
-    const saveBudgetAction = () => {
-        const val = parseInt(budgetEditInput.value, 10);
-        if (!isNaN(val) && val >= 0) {
-            monthlyBudget = val;
-            saveBudgetToLocalStorage();
-            render();
-        }
-        budgetInputGroup.style.display = 'none';
-        budgetDisplayGroup.style.display = 'block';
-    };
-
-    saveBudgetBtn.addEventListener('click', saveBudgetAction);
-    cancelBudgetBtn.addEventListener('click', () => {
-        budgetInputGroup.style.display = 'none';
-        budgetDisplayGroup.style.display = 'block';
-    });
-
-    budgetEditInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            saveBudgetAction();
-        } else if (e.key === 'Escape') {
-            budgetInputGroup.style.display = 'none';
-            budgetDisplayGroup.style.display = 'block';
-        }
-    });
 
     // Category Budgets Editing Delegation
     categoryBudgetsList.addEventListener('click', (e) => {
