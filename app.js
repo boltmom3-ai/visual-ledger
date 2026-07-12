@@ -59,11 +59,22 @@ const MONTH_NAMES = [
 let transactions = [];
 let categoryBudgets = {}; // Category-wise budgets
 let currentPeriod = new Date(); // Represents current year & month
+let currentView = 'monthly'; // 'monthly' or 'yearly'
 
 // --- DOM Elements ---
 const prevMonthBtn = document.getElementById('prev-month-btn');
 const nextMonthBtn = document.getElementById('next-month-btn');
 const currentPeriodText = document.getElementById('current-period-text');
+
+const monthlyViewBtn = document.getElementById('monthly-view-btn');
+const yearlyViewBtn = document.getElementById('yearly-view-btn');
+const monthlyLayout = document.getElementById('monthly-layout');
+const yearlyLayout = document.getElementById('yearly-layout');
+const yearlyGrid = document.getElementById('yearly-grid');
+
+const incomeLabel = document.getElementById('income-label');
+const expenseLabel = document.getElementById('expense-label');
+const balanceLabel = document.getElementById('balance-label');
 
 const totalIncomeEl = document.getElementById('total-income');
 const totalExpenseEl = document.getElementById('total-expense');
@@ -71,6 +82,7 @@ const netBalanceEl = document.getElementById('net-balance');
 
 // Budget Elements
 const categoryBudgetsList = document.getElementById('category-budgets-list');
+const yearlyCategoryList = document.getElementById('yearly-category-list');
 
 const transactionForm = document.getElementById('transaction-form');
 const typeExpenseRadio = document.getElementById('type-expense');
@@ -382,20 +394,234 @@ function renderHistoryTable(periodTransactions) {
     });
 }
 
+// Render Yearly View (12 Months aggregate & cards)
+function renderYearlyView() {
+    yearlyGrid.innerHTML = '';
+    
+    const year = currentPeriod.getFullYear();
+    
+    // Filter transactions for the entire year
+    const yearTransactions = transactions.filter(t => t.date.getFullYear() === year);
+    
+    // 1. Update Annual Dashboard Stats
+    let annualIncome = 0;
+    let annualExpense = 0;
+    yearTransactions.forEach(t => {
+        if (t.type === 'income') {
+            annualIncome += t.amount;
+        } else {
+            annualExpense += t.amount;
+        }
+    });
+    
+    totalIncomeEl.textContent = formatCurrency(annualIncome);
+    totalExpenseEl.textContent = formatCurrency(annualExpense);
+    const annualBalance = annualIncome - annualExpense;
+    netBalanceEl.textContent = formatCurrency(annualBalance);
+    
+    if (annualBalance < 0) {
+        netBalanceEl.style.color = 'var(--color-expense)';
+    } else if (annualBalance > 0) {
+        netBalanceEl.style.color = 'var(--color-income)';
+    } else {
+        netBalanceEl.style.color = 'var(--text-primary)';
+    }
+    
+    // 2. Total Monthly Budget (Sum of category budgets)
+    const monthlyTotalBudget = Object.values(categoryBudgets).reduce((sum, val) => sum + val, 0);
+    
+    // 3. Render 12 months
+    for (let m = 0; m < 12; m++) {
+        const monthTransactions = yearTransactions.filter(t => t.date.getMonth() === m);
+        let mIncome = 0;
+        let mExpense = 0;
+        monthTransactions.forEach(t => {
+            if (t.type === 'income') {
+                mIncome += t.amount;
+            } else {
+                mExpense += t.amount;
+            }
+        });
+        
+        const budgetPercent = monthlyTotalBudget > 0 ? Math.min((mExpense / monthlyTotalBudget) * 100, 100) : 0;
+        const displayPercent = monthlyTotalBudget > 0 ? Math.round((mExpense / monthlyTotalBudget) * 100) : 0;
+        
+        // Status Badge class/text
+        let statusText = 'Normal';
+        let badgeClass = 'month-status-normal';
+        if (monthlyTotalBudget > 0) {
+            if (displayPercent >= 100) {
+                statusText = 'Over Budget';
+                badgeClass = 'month-status-danger';
+            } else if (displayPercent >= 80) {
+                statusText = 'Warning';
+                badgeClass = 'month-status-warning';
+            }
+        } else {
+            statusText = 'No Budget';
+            badgeClass = 'month-status-normal';
+        }
+        
+        let barColor = 'var(--color-income)';
+        if (budgetPercent >= 100) {
+            barColor = 'var(--color-expense)';
+        } else if (budgetPercent >= 80) {
+            barColor = '#f97316';
+        }
+        
+        const mBalance = mIncome - mExpense;
+        const mBalanceClass = mBalance > 0 ? 'income-val' : mBalance < 0 ? 'expense-val' : '';
+        
+        const card = document.createElement('div');
+        card.className = 'month-card';
+        card.innerHTML = `
+            <div class="month-card-header">
+                <span class="month-card-title">${MONTH_NAMES[m]}</span>
+                <span class="month-status-badge ${badgeClass}">${statusText}</span>
+            </div>
+            <div class="month-stats-grid">
+                <div class="month-stat-item">
+                    <span class="month-stat-label">Income</span>
+                    <span class="month-stat-value income-val">${formatCurrency(mIncome)}</span>
+                </div>
+                <div class="month-stat-item">
+                    <span class="month-stat-label">Expense</span>
+                    <span class="month-stat-value expense-val">${formatCurrency(mExpense)}</span>
+                </div>
+                <div class="month-stat-item" style="grid-column: span 2; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 0.5rem; display: flex; flex-direction: row; justify-content: space-between;">
+                    <span class="month-stat-label">Net Balance</span>
+                    <span class="month-stat-value balance-val ${mBalanceClass}">${mBalance >= 0 ? '+' : ''}${formatCurrency(mBalance)}</span>
+                </div>
+            </div>
+            <div class="month-budget-progress-section">
+                <div class="month-budget-text-row">
+                    <span>Budget Usage</span>
+                    <span>${monthlyTotalBudget > 0 ? `${displayPercent}%` : 'Not Set'}</span>
+                </div>
+                <div class="month-budget-bar-bg">
+                    <div class="month-budget-bar-fill" style="width: ${budgetPercent}%; background-color: ${barColor};"></div>
+                </div>
+                <div class="month-budget-text-row" style="font-size: 0.65rem; margin-top: 0.1rem;">
+                    <span>${formatCurrency(mExpense)} spent</span>
+                    <span>Budget: ${monthlyTotalBudget > 0 ? formatCurrency(monthlyTotalBudget) : '₩0'}</span>
+                </div>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => {
+            currentPeriod.setMonth(m);
+            currentView = 'monthly';
+            // Update button states
+            monthlyViewBtn.classList.add('active');
+            yearlyViewBtn.classList.remove('active');
+            render();
+        });
+        
+        yearlyGrid.appendChild(card);
+    }
+
+    // 4. Render Yearly Category Budgets Summary
+    yearlyCategoryList.innerHTML = '';
+    
+    // Group expenses by category for the whole year
+    const yearlyCategoryTotals = {};
+    const yearExpenses = yearTransactions.filter(t => t.type === 'expense');
+    yearExpenses.forEach(t => {
+        yearlyCategoryTotals[t.category] = (yearlyCategoryTotals[t.category] || 0) + t.amount;
+    });
+
+    DEFAULT_CATEGORIES.expense.forEach(cat => {
+        const spent = yearlyCategoryTotals[cat.id] || 0;
+        // Annual budget = monthly budget * 12
+        const monthlyBudget = categoryBudgets[cat.id] || 0;
+        const annualBudget = monthlyBudget * 12;
+        
+        const percent = annualBudget > 0 ? Math.min((spent / annualBudget) * 100, 100) : 0;
+        const displayPercent = annualBudget > 0 ? Math.round((spent / annualBudget) * 100) : 0;
+        
+        let barColor = 'var(--color-income)';
+        if (percent >= 90) {
+            barColor = 'var(--color-expense)';
+        } else if (percent >= 70) {
+            barColor = '#f97316';
+        }
+
+        const budgetDisplay = annualBudget > 0 ? formatCurrency(annualBudget) : 'Not Set';
+        
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.flexDirection = 'column';
+        item.style.gap = '0.35rem';
+        item.style.borderBottom = '1px solid rgba(255, 255, 255, 0.02)';
+        item.style.paddingBottom = '0.65rem';
+
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                <span style="font-weight: 500;"><i class="fa-solid ${cat.icon}" style="color: ${cat.color}; margin-right: 0.5rem; width: 16px;"></i>${cat.name}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-variant-numeric: tabular-nums;">
+                        ${formatCurrency(spent)} / <span style="font-weight: 600; color: var(--text-primary);">${budgetDisplay}</span>
+                    </span>
+                    <button class="edit-cat-budget-btn" data-id="${cat.id}" data-name="${cat.name}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; transition: background 0.2s;" title="Edit Category Budget (Monthly)">
+                        <i class="fa-solid fa-pen" style="font-size: 0.7rem;"></i> Set Budget
+                    </button>
+                </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); height: 5px; border-radius: 2.5px; overflow: hidden; width: 100%;">
+                <div style="width: ${percent}%; height: 100%; background: ${barColor}; transition: width 0.3s ease;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+                <span>Usage status</span>
+                <span style="font-weight: 600; color: ${percent >= 90 ? 'var(--color-expense)' : percent >= 70 ? '#f97316' : 'var(--text-secondary)'};">
+                    ${annualBudget > 0 ? `${displayPercent}% used` : 'No budget set'}
+                </span>
+            </div>
+        `;
+        yearlyCategoryList.appendChild(item);
+    });
+}
+
 // Master Render function
 function render() {
-    // 1. Update Month Header
     const year = currentPeriod.getFullYear();
-    const monthName = MONTH_NAMES[currentPeriod.getMonth()];
-    currentPeriodText.textContent = `${monthName} ${year}`;
-
-    // 2. Filter transactions for the current month
-    const periodTransactions = getFilteredTransactions();
-
-    // 3. Update dashboard & list
-    updateDashboard(periodTransactions);
-    renderCategoryBudgets(periodTransactions);
-    renderHistoryTable(periodTransactions);
+    
+    if (currentView === 'monthly') {
+        // Toggle layout visibility
+        monthlyLayout.style.display = 'grid';
+        yearlyLayout.style.display = 'none';
+        
+        // Update Period Header
+        const monthName = MONTH_NAMES[currentPeriod.getMonth()];
+        currentPeriodText.textContent = `${monthName} ${year}`;
+        
+        // Update Labels
+        incomeLabel.textContent = 'Monthly Income';
+        expenseLabel.textContent = 'Monthly Expense';
+        balanceLabel.textContent = 'Net Balance';
+        
+        // Filter transactions for the current month
+        const periodTransactions = getFilteredTransactions();
+        
+        // Update dashboard & list
+        updateDashboard(periodTransactions);
+        renderCategoryBudgets(periodTransactions);
+        renderHistoryTable(periodTransactions);
+    } else {
+        // Toggle layout visibility
+        monthlyLayout.style.display = 'none';
+        yearlyLayout.style.display = 'block';
+        
+        // Update Period Header (Year only)
+        currentPeriodText.textContent = `${year}`;
+        
+        // Update Labels
+        incomeLabel.textContent = 'Annual Income';
+        expenseLabel.textContent = 'Annual Expense';
+        balanceLabel.textContent = 'Annual Balance';
+        
+        // Render Yearly View (which handles dashboard updates and the 12 month cards)
+        renderYearlyView();
+    }
 }
 
 // --- Event Handlers & Setup ---
@@ -404,12 +630,35 @@ function render() {
 function setupEventListeners() {
     // Month navigation
     prevMonthBtn.addEventListener('click', () => {
-        currentPeriod.setMonth(currentPeriod.getMonth() - 1);
+        if (currentView === 'yearly') {
+            currentPeriod.setFullYear(currentPeriod.getFullYear() - 1);
+        } else {
+            currentPeriod.setMonth(currentPeriod.getMonth() - 1);
+        }
         render();
     });
 
     nextMonthBtn.addEventListener('click', () => {
-        currentPeriod.setMonth(currentPeriod.getMonth() + 1);
+        if (currentView === 'yearly') {
+            currentPeriod.setFullYear(currentPeriod.getFullYear() + 1);
+        } else {
+            currentPeriod.setMonth(currentPeriod.getMonth() + 1);
+        }
+        render();
+    });
+
+    // View switcher toggles
+    monthlyViewBtn.addEventListener('click', () => {
+        currentView = 'monthly';
+        monthlyViewBtn.classList.add('active');
+        yearlyViewBtn.classList.remove('active');
+        render();
+    });
+
+    yearlyViewBtn.addEventListener('click', () => {
+        currentView = 'yearly';
+        yearlyViewBtn.classList.add('active');
+        monthlyViewBtn.classList.remove('active');
         render();
     });
 
@@ -421,15 +670,8 @@ function setupEventListeners() {
     searchInput.addEventListener('input', render);
     filterTypeSelect.addEventListener('change', render);
 
-    // Category Budgets Editing Delegation
-    categoryBudgetsList.addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.edit-cat-budget-btn');
-        if (!editBtn) return;
-
-        const catId = editBtn.getAttribute('data-id');
-        const catName = editBtn.getAttribute('data-name');
+    function handleBudgetEdit(catId, catName) {
         const currentBudget = categoryBudgets[catId] || 0;
-
         const newBudgetStr = prompt(`Enter monthly budget for "${catName}" (KRW):`, currentBudget);
         if (newBudgetStr !== null) {
             const newBudget = parseInt(newBudgetStr, 10);
@@ -456,6 +698,20 @@ function setupEventListeners() {
                 }
             }
         }
+    }
+
+    // Category Budgets Editing Delegation (Monthly View)
+    categoryBudgetsList.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-cat-budget-btn');
+        if (!editBtn) return;
+        handleBudgetEdit(editBtn.getAttribute('data-id'), editBtn.getAttribute('data-name'));
+    });
+
+    // Category Budgets Editing Delegation (Yearly View)
+    yearlyCategoryList.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-cat-budget-btn');
+        if (!editBtn) return;
+        handleBudgetEdit(editBtn.getAttribute('data-id'), editBtn.getAttribute('data-name'));
     });
 
     // Handle form submit

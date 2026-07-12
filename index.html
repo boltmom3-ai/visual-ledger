@@ -22,10 +22,16 @@
                 <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
                 <h1>Visual Ledger <span class="sub-title">Personal Finance</span></h1>
             </div>
-            <div class="period-selector">
-                <button id="prev-month-btn" class="icon-btn" aria-label="Previous Month"><i class="fa-solid fa-chevron-left"></i></button>
-                <span id="current-period-text">July 2026</span>
-                <button id="next-month-btn" class="icon-btn" aria-label="Next Month"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="header-controls">
+                <div class="view-switcher">
+                    <button id="monthly-view-btn" class="view-btn active"><i class="fa-solid fa-calendar-days"></i> Monthly</button>
+                    <button id="yearly-view-btn" class="view-btn"><i class="fa-solid fa-calendar"></i> Yearly</button>
+                </div>
+                <div class="period-selector">
+                    <button id="prev-month-btn" class="icon-btn" aria-label="Previous Month"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="current-period-text">July 2026</span>
+                    <button id="next-month-btn" class="icon-btn" aria-label="Next Month"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
             </div>
         </header>
 
@@ -34,28 +40,41 @@
             <div class="stat-card income-card">
                 <div class="card-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
                 <div class="card-info">
-                    <span class="card-label">Monthly Income</span>
+                    <span class="card-label" id="income-label">Monthly Income</span>
                     <h2 class="card-value" id="total-income">₩0</h2>
                 </div>
             </div>
             <div class="stat-card expense-card">
                 <div class="card-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
                 <div class="card-info">
-                    <span class="card-label">Monthly Expense</span>
+                    <span class="card-label" id="expense-label">Monthly Expense</span>
                     <h2 class="card-value" id="total-expense">₩0</h2>
                 </div>
             </div>
             <div class="stat-card balance-card">
                 <div class="card-icon"><i class="fa-solid fa-scale-balanced"></i></div>
                 <div class="card-info">
-                    <span class="card-label">Net Balance</span>
+                    <span class="card-label" id="balance-label">Net Balance</span>
                     <h2 class="card-value" id="net-balance">₩0</h2>
                 </div>
             </div>
         </section>
 
+        <!-- Yearly Content Area -->
+        <main class="yearly-layout" id="yearly-layout" style="display: none;">
+            <div class="yearly-grid" id="yearly-grid">
+                <!-- 12 Month cards loaded dynamically -->
+            </div>
+            <section class="yearly-category-budgets panel" id="yearly-category-panel">
+                <h3 class="panel-title"><i class="fa-solid fa-sliders"></i> Annual Category Budgets</h3>
+                <div class="category-budgets-list" id="yearly-category-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 720px; overflow-y: auto; padding-right: 0.5rem;">
+                    <!-- Yearly Category Budgets loaded dynamically -->
+                </div>
+            </section>
+        </main>
+
         <!-- Main Content Area -->
-        <main class="main-layout">
+        <main class="main-layout" id="monthly-layout">
             <!-- Left Column: Transaction Input -->
             <section class="form-section panel">
                 <h3 class="panel-title"><i class="fa-solid fa-pen-to-square"></i> Add Transaction</h3>
