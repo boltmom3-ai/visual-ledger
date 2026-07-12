@@ -13,7 +13,7 @@ const firebaseConfig = {
 
 // Initialize Firebase only if the user has replaced the default credentials
 let db = null;
-const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+const isFirebaseConfigured = typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY";
 
 if (isFirebaseConfigured) {
     try {
@@ -531,7 +531,7 @@ function init() {
     const dd = String(today.getDate()).padStart(2, '0');
     dateInput.value = `${yyyy}-${mm}-${dd}`;
 
-    loadLocalStorage();
+    loadLocalStorageOnly();
     populateCategories();
     setupEventListeners();
     loadData(); // Load real-time Firestore sync or Offline Fallback
