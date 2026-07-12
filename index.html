@@ -56,67 +56,89 @@
 
         <!-- Main Content Area -->
         <main class="main-layout">
-            <!-- Left Column Wrapper: Form + Category Budgets -->
-            <div class="left-column-wrapper" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
-                <!-- Transaction Input -->
-                <section class="form-section panel">
-                    <h3 class="panel-title"><i class="fa-solid fa-pen-to-square"></i> Add Transaction</h3>
-                    <form id="transaction-form" novalidate>
-                        <!-- Type Selector -->
-                        <div class="input-group">
-                            <label class="input-label">Type</label>
-                            <div class="type-selector-wrapper">
-                                <input type="radio" id="type-expense" name="type" value="expense" checked>
-                                <label for="type-expense" class="type-btn expense-btn-label">Expense</label>
-                                
-                                <input type="radio" id="type-income" name="type" value="income">
-                                <label for="type-income" class="type-btn income-btn-label">Income</label>
+            <!-- Left Column: Transaction Input -->
+            <section class="form-section panel">
+                <h3 class="panel-title"><i class="fa-solid fa-pen-to-square"></i> Add Transaction</h3>
+                <form id="transaction-form" novalidate>
+                    <!-- Type Selector -->
+                    <div class="input-group">
+                        <label class="input-label">Type</label>
+                        <div class="type-selector-wrapper">
+                            <input type="radio" id="type-expense" name="type" value="expense" checked>
+                            <label for="type-expense" class="type-btn expense-btn-label">Expense</label>
+                            
+                            <input type="radio" id="type-income" name="type" value="income">
+                            <label for="type-income" class="type-btn income-btn-label">Income</label>
+                        </div>
+                    </div>
+
+                    <!-- Date Input -->
+                    <div class="input-group">
+                        <label for="transaction-date" class="input-label">Date</label>
+                        <div class="field-container">
+                            <i class="fa-regular fa-calendar field-icon"></i>
+                            <input type="date" id="transaction-date" required>
+                        </div>
+                    </div>
+
+                    <!-- Category Input -->
+                    <div class="input-group">
+                        <label for="transaction-category" class="input-label">Category</label>
+                        <div class="field-container">
+                            <i class="fa-solid fa-tags field-icon"></i>
+                            <select id="transaction-category" required>
+                                <!-- Categories dynamically loaded based on type -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Amount Input -->
+                    <div class="input-group">
+                        <label for="transaction-amount" class="input-label">Amount (KRW)</label>
+                        <div class="field-container">
+                            <i class="fa-solid fa-won-sign field-icon"></i>
+                            <input type="number" id="transaction-amount" placeholder="Enter amount" min="1" required>
+                        </div>
+                    </div>
+
+                    <!-- Description Input -->
+                    <div class="input-group">
+                        <label for="transaction-desc" class="input-label">Description</label>
+                        <div class="field-container">
+                            <i class="fa-solid fa-align-left field-icon"></i>
+                            <input type="text" id="transaction-desc" placeholder="e.g. Grocery shopping" required>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-btn">
+                        <i class="fa-solid fa-plus"></i> Add Record
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Column Wrapper: Expense Breakdown + Category Budgets -->
+            <div class="right-column-wrapper" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+                <!-- Statistics & Charts -->
+                <section class="charts-section panel">
+                    <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Expense Breakdown</h3>
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <!-- Custom SVG Donut Chart -->
+                            <svg viewBox="0 0 100 100" class="donut-chart" id="svg-donut">
+                                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1f293d" stroke-width="12" />
+                                <g id="donut-segments"></g>
+                            </svg>
+                            <div class="chart-center-text">
+                                <span class="chart-center-label">Total Expense</span>
+                                <span class="chart-center-val" id="chart-center-amount">₩0</span>
                             </div>
                         </div>
-
-                        <!-- Date Input -->
-                        <div class="input-group">
-                            <label for="transaction-date" class="input-label">Date</label>
-                            <div class="field-container">
-                                <i class="fa-regular fa-calendar field-icon"></i>
-                                <input type="date" id="transaction-date" required>
-                            </div>
+                        <div class="chart-legend" id="chart-legend-list">
+                            <!-- Legend items loaded here -->
+                            <div class="no-data-text">No expenses recorded this month.</div>
                         </div>
-
-                        <!-- Category Input -->
-                        <div class="input-group">
-                            <label for="transaction-category" class="input-label">Category</label>
-                            <div class="field-container">
-                                <i class="fa-solid fa-tags field-icon"></i>
-                                <select id="transaction-category" required>
-                                    <!-- Categories dynamically loaded based on type -->
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Amount Input -->
-                        <div class="input-group">
-                            <label for="transaction-amount" class="input-label">Amount (KRW)</label>
-                            <div class="field-container">
-                                <i class="fa-solid fa-won-sign field-icon"></i>
-                                <input type="number" id="transaction-amount" placeholder="Enter amount" min="1" required>
-                            </div>
-                        </div>
-
-                        <!-- Description Input -->
-                        <div class="input-group">
-                            <label for="transaction-desc" class="input-label">Description</label>
-                            <div class="field-container">
-                                <i class="fa-solid fa-align-left field-icon"></i>
-                                <input type="text" id="transaction-desc" placeholder="e.g. Grocery shopping" required>
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="submit-btn">
-                            <i class="fa-solid fa-plus"></i> Add Record
-                        </button>
-                    </form>
+                    </div>
                 </section>
 
                 <!-- Category Budgets Section -->
@@ -127,28 +149,6 @@
                     </div>
                 </section>
             </div>
-
-            <!-- Middle/Right Panel: Statistics & Charts -->
-            <section class="charts-section panel">
-                <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Expense Breakdown</h3>
-                <div class="chart-container">
-                    <div class="chart-wrapper">
-                        <!-- Custom SVG Donut Chart -->
-                        <svg viewBox="0 0 100 100" class="donut-chart" id="svg-donut">
-                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1f293d" stroke-width="12" />
-                            <g id="donut-segments"></g>
-                        </svg>
-                        <div class="chart-center-text">
-                            <span class="chart-center-label">Total Expense</span>
-                            <span class="chart-center-val" id="chart-center-amount">₩0</span>
-                        </div>
-                    </div>
-                    <div class="chart-legend" id="chart-legend-list">
-                        <!-- Legend items loaded here -->
-                        <div class="no-data-text">No expenses recorded this month.</div>
-                    </div>
-                </div>
-            </section>
 
             <!-- Full-width / Bottom Panel: History Table/List -->
             <section class="history-section panel">
