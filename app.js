@@ -51,7 +51,6 @@ const descInput = document.getElementById('transaction-desc');
 const svgDonut = document.getElementById('svg-donut');
 const donutSegmentsGroup = document.getElementById('donut-segments');
 const chartCenterAmount = document.getElementById('chart-center-amount');
-const chartLegendList = document.getElementById('chart-legend-list');
 
 const searchInput = document.getElementById('search-input');
 const filterTypeSelect = document.getElementById('filter-type');
@@ -246,10 +245,9 @@ function renderCategoryBudgets(periodTransactions) {
     });
 }
 
-// Render SVG Donut Chart and Legend
+// Render SVG Donut Chart
 function renderCharts(periodTransactions) {
     donutSegmentsGroup.innerHTML = '';
-    chartLegendList.innerHTML = '';
 
     const expenses = periodTransactions.filter(t => t.type === 'expense');
     const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
@@ -257,7 +255,6 @@ function renderCharts(periodTransactions) {
     chartCenterAmount.textContent = formatCurrency(totalExpense);
 
     if (totalExpense === 0) {
-        chartLegendList.innerHTML = `<div class="no-data-text">No expenses recorded this month.</div>`;
         // Draw standard empty circle
         donutSegmentsGroup.innerHTML = `<circle cx="50" cy="50" r="40" fill="transparent" stroke="#1f293d" stroke-width="12" />`;
         return;
@@ -303,18 +300,6 @@ function renderCharts(periodTransactions) {
         
         donutSegmentsGroup.appendChild(circle);
         accumulatedOffset += segmentLength;
-
-        // Create Legend item
-        const legendItem = document.createElement('div');
-        legendItem.className = 'legend-item';
-        legendItem.innerHTML = `
-            <span class="legend-color" style="background-color: ${cat.color}"></span>
-            <div class="legend-label-group">
-                <span class="legend-name">${cat.name}</span>
-                <span class="legend-percent">${Math.round(cat.percentage)}% (${formatCurrency(cat.amount)})</span>
-            </div>
-        `;
-        chartLegendList.appendChild(legendItem);
     });
 }
 
