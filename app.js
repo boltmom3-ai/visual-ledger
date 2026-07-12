@@ -2,12 +2,13 @@
 // TO ENABLE REAL-TIME SYNC ACROSS DEVICES:
 // Replace the values below with your Firebase project configuration.
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAfMX0CTEXldZZvtxHXclsMsAFaNtELw5M",
+  authDomain: "ledger-f9913.firebaseapp.com",
+  projectId: "ledger-f9913",
+  storageBucket: "ledger-f9913.firebasestorage.app",
+  messagingSenderId: "328798030554",
+  appId: "1:328798030554:web:a3ce5f2e2cc2718ed5f3e3",
+  measurementId: "G-9KQZ7SDB6C"
 };
 
 // Initialize Firebase only if the user has replaced the default credentials
