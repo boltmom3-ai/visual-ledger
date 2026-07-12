@@ -117,34 +117,13 @@
                 </form>
             </section>
 
-            <!-- Right Column Wrapper: Expense Breakdown + Category Budgets -->
-            <div class="right-column-wrapper" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
-                <!-- Statistics & Charts -->
-                <section class="charts-section panel">
-                    <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Expense Breakdown</h3>
-                    <div class="chart-container" style="justify-content: center; min-height: 220px; padding: 1rem 0;">
-                        <div class="chart-wrapper">
-                            <!-- Custom SVG Donut Chart -->
-                            <svg viewBox="0 0 100 100" class="donut-chart" id="svg-donut">
-                                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1f293d" stroke-width="12" />
-                                <g id="donut-segments"></g>
-                            </svg>
-                            <div class="chart-center-text">
-                                <span class="chart-center-label">Total Expense</span>
-                                <span class="chart-center-val" id="chart-center-amount">₩0</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Category Budgets Section -->
-                <section class="category-budgets-section panel">
-                    <h3 class="panel-title"><i class="fa-solid fa-sliders"></i> Category Budgets</h3>
-                    <div class="category-budgets-list" id="category-budgets-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 380px; overflow-y: auto; padding-right: 0.5rem;">
-                        <!-- Category budgets loaded dynamically -->
-                    </div>
-                </section>
-            </div>
+            <!-- Right Column: Category Budgets Section -->
+            <section class="category-budgets-section panel">
+                <h3 class="panel-title"><i class="fa-solid fa-sliders"></i> Category Budgets</h3>
+                <div class="category-budgets-list" id="category-budgets-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 480px; overflow-y: auto; padding-right: 0.5rem;">
+                    <!-- Category budgets loaded dynamically -->
+                </div>
+            </section>
 
             <!-- Full-width / Bottom Panel: History Table/List -->
             <section class="history-section panel">

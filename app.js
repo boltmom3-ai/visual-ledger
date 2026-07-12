@@ -48,10 +48,6 @@ const categorySelect = document.getElementById('transaction-category');
 const amountInput = document.getElementById('transaction-amount');
 const descInput = document.getElementById('transaction-desc');
 
-const svgDonut = document.getElementById('svg-donut');
-const donutSegmentsGroup = document.getElementById('donut-segments');
-const chartCenterAmount = document.getElementById('chart-center-amount');
-
 const searchInput = document.getElementById('search-input');
 const filterTypeSelect = document.getElementById('filter-type');
 const transactionListBody = document.getElementById('transaction-list-body');
@@ -245,63 +241,6 @@ function renderCategoryBudgets(periodTransactions) {
     });
 }
 
-// Render SVG Donut Chart
-function renderCharts(periodTransactions) {
-    donutSegmentsGroup.innerHTML = '';
-
-    const expenses = periodTransactions.filter(t => t.type === 'expense');
-    const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
-
-    chartCenterAmount.textContent = formatCurrency(totalExpense);
-
-    if (totalExpense === 0) {
-        // Draw standard empty circle
-        donutSegmentsGroup.innerHTML = `<circle cx="50" cy="50" r="40" fill="transparent" stroke="#1f293d" stroke-width="12" />`;
-        return;
-    }
-
-    // Group expenses by category
-    const categoryTotals = {};
-    expenses.forEach(t => {
-        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
-    });
-
-    // Sort categories by amount descending
-    const sortedCategories = Object.keys(categoryTotals).map(catId => {
-        const catInfo = getCategoryInfo('expense', catId);
-        return {
-            id: catId,
-            name: catInfo.name,
-            color: catInfo.color,
-            amount: categoryTotals[catId],
-            percentage: (categoryTotals[catId] / totalExpense) * 100
-        };
-    }).sort((a, b) => b.amount - a.amount);
-
-    // Calculate segments positions in SVG Circle
-    const r = 40;
-    const circ = 2 * Math.PI * r;
-    let accumulatedOffset = 0;
-
-    sortedCategories.forEach(cat => {
-        const segmentLength = (cat.percentage / 100) * circ;
-        
-        // Create circle segment
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('class', 'chart-segment');
-        circle.setAttribute('cx', '50');
-        circle.setAttribute('cy', '50');
-        circle.setAttribute('r', r.toString());
-        circle.setAttribute('fill', 'transparent');
-        circle.setAttribute('stroke', cat.color);
-        circle.setAttribute('stroke-width', '12');
-        circle.setAttribute('stroke-dasharray', `${segmentLength} ${circ}`);
-        circle.setAttribute('stroke-dashoffset', (-accumulatedOffset).toString());
-        
-        donutSegmentsGroup.appendChild(circle);
-        accumulatedOffset += segmentLength;
-    });
-}
 
 // Render detailed transaction history table
 function renderHistoryTable(periodTransactions) {
@@ -367,10 +306,9 @@ function render() {
     // 2. Filter transactions for the current month
     const periodTransactions = getFilteredTransactions();
 
-    // 3. Update dashboard & visualization charts & list
+    // 3. Update dashboard & list
     updateDashboard(periodTransactions);
     renderCategoryBudgets(periodTransactions);
-    renderCharts(periodTransactions);
     renderHistoryTable(periodTransactions);
 }
 
