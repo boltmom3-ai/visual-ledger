@@ -1,3 +1,31 @@
+// --- Firebase Configuration ---
+// TO ENABLE REAL-TIME SYNC ACROSS DEVICES:
+// Replace the values below with your Firebase project configuration.
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase only if the user has replaced the default credentials
+let db = null;
+const isFirebaseConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+if (isFirebaseConfigured) {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        console.log("Firebase Firestore initialized successfully.");
+    } catch (e) {
+        console.error("Failed to initialize Firebase:", e);
+    }
+} else {
+    console.log("Firebase is not configured. Running in Local Storage offline mode.");
+}
+
 // --- Configuration & Constants ---
 const DEFAULT_CATEGORIES = {
     income: [
@@ -68,15 +96,66 @@ function getCategoryInfo(type, id) {
 
 // --- App Functions ---
 
-// Load data from LocalStorage
-function loadLocalStorage() {
-    // Load transactions
+// Load data (Initial fetch & subscription)
+function loadData() {
+    if (isFirebaseConfigured && db) {
+        // 1. Subscribe to Firestore transactions collection (real-time sync)
+        db.collection("transactions").onSnapshot((snapshot) => {
+            transactions = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                transactions.push({
+                    id: doc.id, // Use Firestore doc ID
+                    type: data.type,
+                    date: new Date(data.date),
+                    category: data.category,
+                    amount: data.amount,
+                    desc: data.desc
+                });
+            });
+            render();
+        }, (error) => {
+            console.error("Firestore transactions subscription failed:", error);
+            alert("Database subscription error. Check if Firestore rules are in Test Mode.");
+        });
+
+        // 2. Subscribe to Category budgets setting document
+        db.collection("settings").doc("budgets").onSnapshot((doc) => {
+            if (doc.exists) {
+                categoryBudgets = doc.data();
+            } else {
+                // Initialize default budgets in Firestore
+                categoryBudgets = {
+                    food: 500000,
+                    transport: 100000,
+                    shopping: 300000,
+                    housing: 300000,
+                    medical: 150000,
+                    education: 200000,
+                    culture: 150000,
+                    'expense-etc': 100000
+                };
+                db.collection("settings").doc("budgets").set(categoryBudgets);
+            }
+            render();
+        }, (error) => {
+            console.error("Firestore budgets subscription failed:", error);
+        });
+
+    } else {
+        // Fallback: LocalStorage Mode
+        loadLocalStorageOnly();
+    }
+}
+
+// LocalStorage Fallback loaders
+function loadLocalStorageOnly() {
     const data = localStorage.getItem('visual_ledger_transactions_v4');
     if (data) {
         try {
             transactions = JSON.parse(data).map(item => ({
                 ...item,
-                date: new Date(item.date) // convert date string back to Date object
+                date: new Date(item.date)
             }));
         } catch (e) {
             console.error('Failed to parse local storage data.', e);
@@ -97,10 +176,9 @@ function loadLocalStorage() {
             { id: 'seed-9', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 12), category: 'medical', amount: 12000, desc: 'Cold Medicine' },
             { id: 'seed-10', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 14), category: 'expense-etc', amount: 55000, desc: 'Coffee Shop Study Sessions' }
         ];
-        saveLocalStorage();
+        saveLocalStorageOnly();
     }
 
-    // Load category budgets
     const savedCatBudgets = localStorage.getItem('visual_ledger_category_budgets');
     if (savedCatBudgets) {
         try {
@@ -110,7 +188,6 @@ function loadLocalStorage() {
             categoryBudgets = {};
         }
     } else {
-        // Defaults
         categoryBudgets = {
             food: 500000,
             transport: 100000,
@@ -121,16 +198,16 @@ function loadLocalStorage() {
             culture: 150000,
             'expense-etc': 100000
         };
-        saveCategoryBudgetsToLocalStorage();
+        saveCategoryBudgetsToLocalStorageOnly();
     }
 }
 
-// Save data to LocalStorage
-function saveLocalStorage() {
+// LocalStorage Writers
+function saveLocalStorageOnly() {
     localStorage.setItem('visual_ledger_transactions_v4', JSON.stringify(transactions));
 }
 
-function saveCategoryBudgetsToLocalStorage() {
+function saveCategoryBudgetsToLocalStorageOnly() {
     localStorage.setItem('visual_ledger_category_budgets', JSON.stringify(categoryBudgets));
 }
 
@@ -241,7 +318,6 @@ function renderCategoryBudgets(periodTransactions) {
     });
 }
 
-
 // Render detailed transaction history table
 function renderHistoryTable(periodTransactions) {
     transactionListBody.innerHTML = '';
@@ -349,13 +425,25 @@ function setupEventListeners() {
             const newBudget = parseInt(newBudgetStr, 10);
             if (!isNaN(newBudget) && newBudget >= 0) {
                 categoryBudgets[catId] = newBudget;
-                saveCategoryBudgetsToLocalStorage();
-                render();
+                
+                if (isFirebaseConfigured && db) {
+                    db.collection("settings").doc("budgets").set(categoryBudgets)
+                        .catch(err => console.error("Failed to save budget in Firestore:", err));
+                } else {
+                    saveCategoryBudgetsToLocalStorageOnly();
+                    render();
+                }
             } else if (newBudgetStr.trim() === '') {
                 // Clear budget if empty
                 categoryBudgets[catId] = 0;
-                saveCategoryBudgetsToLocalStorage();
-                render();
+                
+                if (isFirebaseConfigured && db) {
+                    db.collection("settings").doc("budgets").set(categoryBudgets)
+                        .catch(err => console.error("Failed to save budget in Firestore:", err));
+                } else {
+                    saveCategoryBudgetsToLocalStorageOnly();
+                    render();
+                }
             }
         }
     });
@@ -376,24 +464,39 @@ function setupEventListeners() {
             return;
         }
 
-        const newTransaction = {
-            id: 'tx-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-            type,
-            date: new Date(dateStr),
-            category,
-            amount,
-            desc
-        };
+        const dateObj = new Date(dateStr);
 
-        transactions.push(newTransaction);
-        saveLocalStorage();
-        
-        // Reset inputs
-        amountInput.value = '';
-        descInput.value = '';
-        
-        // Render updates
-        render();
+        if (isFirebaseConfigured && db) {
+            // Write to Firestore (will automatically trigger onSnapshot and render)
+            db.collection("transactions").add({
+                type,
+                date: dateStr, // Save as ISO string for simple cross-device date handling
+                category,
+                amount,
+                desc
+            }).then(() => {
+                amountInput.value = '';
+                descInput.value = '';
+            }).catch((err) => {
+                console.error("Failed to add transaction in Firestore:", err);
+                alert("Failed to save to cloud: " + err.message);
+            });
+        } else {
+            // Offline fallback
+            const newTransaction = {
+                id: 'tx-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                type,
+                date: dateObj,
+                category,
+                amount,
+                desc
+            };
+            transactions.push(newTransaction);
+            saveLocalStorageOnly();
+            amountInput.value = '';
+            descInput.value = '';
+            render();
+        }
     });
 
     // Delete transaction handler
@@ -403,9 +506,17 @@ function setupEventListeners() {
 
         const id = deleteBtn.getAttribute('data-id');
         if (confirm('Are you sure you want to delete this transaction record?')) {
-            transactions = transactions.filter(t => t.id !== id);
-            saveLocalStorage();
-            render();
+            if (isFirebaseConfigured && db) {
+                db.collection("transactions").doc(id).delete()
+                    .catch((err) => {
+                        console.error("Failed to delete transaction in Firestore:", err);
+                        alert("Failed to delete from cloud: " + err.message);
+                    });
+            } else {
+                transactions = transactions.filter(t => t.id !== id);
+                saveLocalStorageOnly();
+                render();
+            }
         }
     });
 }
@@ -422,7 +533,7 @@ function init() {
     loadLocalStorage();
     populateCategories();
     setupEventListeners();
-    render();
+    loadData(); // Load real-time Firestore sync or Offline Fallback
 }
 
 // Start the application
