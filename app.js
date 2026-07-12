@@ -56,11 +56,9 @@ const noHistoryMessage = document.getElementById('no-history-message');
 
 // --- Helper Functions ---
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('ko-KR', {
         style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        currency: 'KRW'
     }).format(amount);
 }
 
@@ -73,7 +71,7 @@ function getCategoryInfo(type, id) {
 
 // Load data from LocalStorage
 function loadLocalStorage() {
-    const data = localStorage.getItem('visual_ledger_transactions_v2');
+    const data = localStorage.getItem('visual_ledger_transactions_v3');
     if (data) {
         try {
             transactions = JSON.parse(data).map(item => ({
@@ -85,13 +83,13 @@ function loadLocalStorage() {
             transactions = [];
         }
     } else {
-        // Sample seed data to present on first load
+        // Sample seed data to present on first load (KRW values)
         transactions = [
-            { id: 'seed-1', type: 'income', date: new Date(), category: 'salary', amount: 3500.00, desc: 'Monthly Salary' },
-            { id: 'seed-2', type: 'expense', date: new Date(), category: 'food', amount: 15.50, desc: 'Lunch at Cafe' },
-            { id: 'seed-3', type: 'expense', date: new Date(), category: 'transport', amount: 2.75, desc: 'Subway Ride' },
-            { id: 'seed-4', type: 'expense', date: new Date(), category: 'shopping', amount: 79.99, desc: 'Summer Shirt' },
-            { id: 'seed-5', type: 'expense', date: new Date(), category: 'housing', amount: 120.00, desc: 'Internet & Phone Utilities' }
+            { id: 'seed-1', type: 'income', date: new Date(), category: 'salary', amount: 3500000, desc: 'Monthly Salary' },
+            { id: 'seed-2', type: 'expense', date: new Date(), category: 'food', amount: 15500, desc: 'Lunch at Cafe' },
+            { id: 'seed-3', type: 'expense', date: new Date(), category: 'transport', amount: 2700, desc: 'Subway Ride' },
+            { id: 'seed-4', type: 'expense', date: new Date(), category: 'shopping', amount: 79000, desc: 'Summer Shirt' },
+            { id: 'seed-5', type: 'expense', date: new Date(), category: 'housing', amount: 120000, desc: 'Internet & Phone Utilities' }
         ];
         saveLocalStorage();
     }
@@ -99,7 +97,7 @@ function loadLocalStorage() {
 
 // Save data to LocalStorage
 function saveLocalStorage() {
-    localStorage.setItem('visual_ledger_transactions_v2', JSON.stringify(transactions));
+    localStorage.setItem('visual_ledger_transactions_v3', JSON.stringify(transactions));
 }
 
 // Populate Category dropdown based on selected type (income/expense)
@@ -318,7 +316,7 @@ function setupEventListeners() {
     transactionForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const amount = parseFloat(amountInput.value);
+        const amount = parseInt(amountInput.value, 10);
         const desc = descInput.value.trim();
         const dateStr = dateInput.value;
         const category = categorySelect.value;
