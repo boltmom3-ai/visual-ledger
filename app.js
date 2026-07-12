@@ -227,8 +227,8 @@ function renderCategoryBudgets(periodTransactions) {
                     <span style="color: var(--text-secondary); font-size: 0.8rem; font-variant-numeric: tabular-nums;">
                         ${formatCurrency(spent)} / <span style="font-weight: 600; color: var(--text-primary);">${budgetDisplay}</span>
                     </span>
-                    <button class="edit-cat-budget-btn icon-btn" data-id="${cat.id}" data-name="${cat.name}" style="padding: 0.15rem; font-size: 0.7rem; color: var(--text-secondary);" title="Edit Category Budget">
-                        <i class="fa-solid fa-pen"></i>
+                    <button class="edit-cat-budget-btn" data-id="${cat.id}" data-name="${cat.name}" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.25rem 0.5rem; font-size: 0.75rem; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; transition: background 0.2s;" title="Edit Category Budget">
+                        <i class="fa-solid fa-pen" style="font-size: 0.7rem;"></i> Set Budget
                     </button>
                 </div>
             </div>
