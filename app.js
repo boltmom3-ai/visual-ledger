@@ -25,6 +25,7 @@ const MONTH_NAMES = [
 
 // --- App State ---
 let transactions = [];
+let monthlyBudget = 2000000; // Default budget (2,000,000 KRW)
 let currentPeriod = new Date(); // Represents current year & month
 
 // --- DOM Elements ---
@@ -35,6 +36,18 @@ const currentPeriodText = document.getElementById('current-period-text');
 const totalIncomeEl = document.getElementById('total-income');
 const totalExpenseEl = document.getElementById('total-expense');
 const netBalanceEl = document.getElementById('net-balance');
+
+// Budget Elements
+const monthlyBudgetEl = document.getElementById('monthly-budget');
+const editBudgetBtn = document.getElementById('edit-budget-btn');
+const budgetDisplayGroup = document.getElementById('budget-display-group');
+const budgetInputGroup = document.getElementById('budget-input-group');
+const budgetEditInput = document.getElementById('budget-edit-input');
+const saveBudgetBtn = document.getElementById('save-budget-btn');
+const cancelBudgetBtn = document.getElementById('cancel-budget-btn');
+const budgetProgressContainer = document.getElementById('budget-progress-container');
+const budgetProgressBar = document.getElementById('budget-progress-bar');
+const budgetPercentageText = document.getElementById('budget-percentage-text');
 
 const transactionForm = document.getElementById('transaction-form');
 const typeExpenseRadio = document.getElementById('type-expense');
@@ -71,6 +84,7 @@ function getCategoryInfo(type, id) {
 
 // Load data from LocalStorage
 function loadLocalStorage() {
+    // Load transactions
     const data = localStorage.getItem('visual_ledger_transactions_v3');
     if (data) {
         try {
@@ -93,11 +107,21 @@ function loadLocalStorage() {
         ];
         saveLocalStorage();
     }
+
+    // Load budget
+    const savedBudget = localStorage.getItem('visual_ledger_monthly_budget');
+    if (savedBudget !== null) {
+        monthlyBudget = parseInt(savedBudget, 10) || 0;
+    }
 }
 
 // Save data to LocalStorage
 function saveLocalStorage() {
     localStorage.setItem('visual_ledger_transactions_v3', JSON.stringify(transactions));
+}
+
+function saveBudgetToLocalStorage() {
+    localStorage.setItem('visual_ledger_monthly_budget', monthlyBudget.toString());
 }
 
 // Populate Category dropdown based on selected type (income/expense)
@@ -119,7 +143,7 @@ function getFilteredTransactions() {
     return transactions.filter(t => t.date.getFullYear() === year && t.date.getMonth() === month);
 }
 
-// Update the Stats Dashboard Cards
+// Update the Stats Dashboard Cards & Budget progress
 function updateDashboard(periodTransactions) {
     let income = 0;
     let expense = 0;
@@ -144,6 +168,29 @@ function updateDashboard(periodTransactions) {
         netBalanceEl.style.color = 'var(--color-income)';
     } else {
         netBalanceEl.style.color = 'var(--text-primary)';
+    }
+
+    // Budget UI Calculation
+    monthlyBudgetEl.textContent = formatCurrency(monthlyBudget);
+
+    if (monthlyBudget > 0) {
+        budgetProgressContainer.style.display = 'block';
+        const percent = Math.min((expense / monthlyBudget) * 100, 100);
+        const displayPercent = Math.round((expense / monthlyBudget) * 100);
+        
+        budgetProgressBar.style.width = `${percent}%`;
+        budgetPercentageText.textContent = `${displayPercent}% of budget used`;
+
+        // Style progress bar based on utilization
+        if (percent < 70) {
+            budgetProgressBar.style.backgroundColor = 'var(--color-income)'; // Green
+        } else if (percent < 90) {
+            budgetProgressBar.style.backgroundColor = '#f97316'; // Orange
+        } else {
+            budgetProgressBar.style.backgroundColor = 'var(--color-expense)'; // Red
+        }
+    } else {
+        budgetProgressContainer.style.display = 'none';
     }
 }
 
@@ -311,6 +358,41 @@ function setupEventListeners() {
     // Search and Filter updates
     searchInput.addEventListener('input', render);
     filterTypeSelect.addEventListener('change', render);
+
+    // Budget Editing Events
+    editBudgetBtn.addEventListener('click', () => {
+        budgetDisplayGroup.style.display = 'none';
+        budgetInputGroup.style.display = 'flex';
+        budgetEditInput.value = monthlyBudget;
+        budgetEditInput.focus();
+        budgetEditInput.select();
+    });
+
+    const saveBudgetAction = () => {
+        const val = parseInt(budgetEditInput.value, 10);
+        if (!isNaN(val) && val >= 0) {
+            monthlyBudget = val;
+            saveBudgetToLocalStorage();
+            render();
+        }
+        budgetInputGroup.style.display = 'none';
+        budgetDisplayGroup.style.display = 'block';
+    };
+
+    saveBudgetBtn.addEventListener('click', saveBudgetAction);
+    cancelBudgetBtn.addEventListener('click', () => {
+        budgetInputGroup.style.display = 'none';
+        budgetDisplayGroup.style.display = 'block';
+    });
+
+    budgetEditInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            saveBudgetAction();
+        } else if (e.key === 'Escape') {
+            budgetInputGroup.style.display = 'none';
+            budgetDisplayGroup.style.display = 'block';
+        }
+    });
 
     // Handle form submit
     transactionForm.addEventListener('submit', (e) => {

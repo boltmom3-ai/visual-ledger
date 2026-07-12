@@ -52,6 +52,30 @@
                     <h2 class="card-value" id="net-balance">₩0</h2>
                 </div>
             </div>
+            <div class="stat-card budget-card">
+                <div class="card-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <div class="card-info" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="card-label">Monthly Budget</span>
+                        <button id="edit-budget-btn" class="icon-btn" style="padding: 0.2rem; font-size: 0.75rem;" title="Edit Budget"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                    <div id="budget-display-group">
+                        <h2 class="card-value" id="monthly-budget">₩0</h2>
+                    </div>
+                    <div id="budget-input-group" style="display: none; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                        <input type="number" id="budget-edit-input" style="width: 110px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 8px; color: white; padding: 0.35rem 0.5rem; font-size: 0.9rem;" min="0">
+                        <button id="save-budget-btn" style="background: var(--color-accent); color: white; border: none; padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: 600;">Save</button>
+                        <button id="cancel-budget-btn" style="background: transparent; color: var(--text-secondary); border: none; padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Cancel</button>
+                    </div>
+                    <!-- Budget progress utilization bar -->
+                    <div id="budget-progress-container" style="margin-top: 0.65rem; display: none;">
+                        <div class="budget-progress-bar-wrapper" style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 3px; overflow: hidden; width: 100%;">
+                            <div id="budget-progress-bar" style="width: 0%; height: 100%; background: var(--color-income); transition: width 0.3s ease;"></div>
+                        </div>
+                        <span id="budget-percentage-text" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem; display: block; font-weight: 500;">0% of budget used</span>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Main Content Area -->
