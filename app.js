@@ -26,6 +26,7 @@ const MONTH_NAMES = [
 // --- App State ---
 let transactions = [];
 let monthlyBudget = 2000000; // Default budget (2,000,000 KRW)
+let categoryBudgets = {}; // Category-wise budgets
 let currentPeriod = new Date(); // Represents current year & month
 
 // --- DOM Elements ---
@@ -48,6 +49,7 @@ const cancelBudgetBtn = document.getElementById('cancel-budget-btn');
 const budgetProgressContainer = document.getElementById('budget-progress-container');
 const budgetProgressBar = document.getElementById('budget-progress-bar');
 const budgetPercentageText = document.getElementById('budget-percentage-text');
+const categoryBudgetsList = document.getElementById('category-budgets-list');
 
 const transactionForm = document.getElementById('transaction-form');
 const typeExpenseRadio = document.getElementById('type-expense');
@@ -113,6 +115,30 @@ function loadLocalStorage() {
     if (savedBudget !== null) {
         monthlyBudget = parseInt(savedBudget, 10) || 0;
     }
+
+    // Load category budgets
+    const savedCatBudgets = localStorage.getItem('visual_ledger_category_budgets');
+    if (savedCatBudgets) {
+        try {
+            categoryBudgets = JSON.parse(savedCatBudgets);
+        } catch (e) {
+            console.error('Failed to parse category budgets.', e);
+            categoryBudgets = {};
+        }
+    } else {
+        // Defaults
+        categoryBudgets = {
+            food: 500000,
+            transport: 100000,
+            shopping: 300000,
+            housing: 300000,
+            medical: 150000,
+            education: 200000,
+            culture: 150000,
+            'expense-etc': 100000
+        };
+        saveCategoryBudgetsToLocalStorage();
+    }
 }
 
 // Save data to LocalStorage
@@ -122,6 +148,10 @@ function saveLocalStorage() {
 
 function saveBudgetToLocalStorage() {
     localStorage.setItem('visual_ledger_monthly_budget', monthlyBudget.toString());
+}
+
+function saveCategoryBudgetsToLocalStorage() {
+    localStorage.setItem('visual_ledger_category_budgets', JSON.stringify(categoryBudgets));
 }
 
 // Populate Category dropdown based on selected type (income/expense)
@@ -192,6 +222,66 @@ function updateDashboard(periodTransactions) {
     } else {
         budgetProgressContainer.style.display = 'none';
     }
+}
+
+// Render category-wise budget progress bars
+function renderCategoryBudgets(periodTransactions) {
+    categoryBudgetsList.innerHTML = '';
+    
+    // Group expenses by category
+    const categoryTotals = {};
+    const expenses = periodTransactions.filter(t => t.type === 'expense');
+    expenses.forEach(t => {
+        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+    });
+
+    DEFAULT_CATEGORIES.expense.forEach(cat => {
+        const spent = categoryTotals[cat.id] || 0;
+        const budget = categoryBudgets[cat.id] || 0;
+        
+        const percent = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+        const displayPercent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+        
+        let barColor = 'var(--color-income)';
+        if (percent >= 90) {
+            barColor = 'var(--color-expense)';
+        } else if (percent >= 70) {
+            barColor = '#f97316';
+        }
+
+        const budgetDisplay = budget > 0 ? formatCurrency(budget) : 'Not Set';
+        
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.flexDirection = 'column';
+        item.style.gap = '0.35rem';
+        item.style.borderBottom = '1px solid rgba(255, 255, 255, 0.02)';
+        item.style.paddingBottom = '0.65rem';
+
+        item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                <span style="font-weight: 500;"><i class="fa-solid ${cat.icon}" style="color: ${cat.color}; margin-right: 0.5rem; width: 16px;"></i>${cat.name}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-variant-numeric: tabular-nums;">
+                        ${formatCurrency(spent)} / <span style="font-weight: 600; color: var(--text-primary);">${budgetDisplay}</span>
+                    </span>
+                    <button class="edit-cat-budget-btn icon-btn" data-id="${cat.id}" data-name="${cat.name}" style="padding: 0.15rem; font-size: 0.7rem; color: var(--text-secondary);" title="Edit Category Budget">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); height: 5px; border-radius: 2.5px; overflow: hidden; width: 100%;">
+                <div style="width: ${percent}%; height: 100%; background: ${barColor}; transition: width 0.3s ease;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+                <span>Usage status</span>
+                <span style="font-weight: 600; color: ${percent >= 90 ? 'var(--color-expense)' : percent >= 70 ? '#f97316' : 'var(--text-secondary)'};">
+                    ${budget > 0 ? `${displayPercent}% used` : 'No budget set'}
+                </span>
+            </div>
+        `;
+        categoryBudgetsList.appendChild(item);
+    });
 }
 
 // Render SVG Donut Chart and Legend
@@ -332,6 +422,7 @@ function render() {
 
     // 3. Update dashboard & visualization charts & list
     updateDashboard(periodTransactions);
+    renderCategoryBudgets(periodTransactions);
     renderCharts(periodTransactions);
     renderHistoryTable(periodTransactions);
 }
@@ -391,6 +482,31 @@ function setupEventListeners() {
         } else if (e.key === 'Escape') {
             budgetInputGroup.style.display = 'none';
             budgetDisplayGroup.style.display = 'block';
+        }
+    });
+
+    // Category Budgets Editing Delegation
+    categoryBudgetsList.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-cat-budget-btn');
+        if (!editBtn) return;
+
+        const catId = editBtn.getAttribute('data-id');
+        const catName = editBtn.getAttribute('data-name');
+        const currentBudget = categoryBudgets[catId] || 0;
+
+        const newBudgetStr = prompt(`Enter monthly budget for "${catName}" (KRW):`, currentBudget);
+        if (newBudgetStr !== null) {
+            const newBudget = parseInt(newBudgetStr, 10);
+            if (!isNaN(newBudget) && newBudget >= 0) {
+                categoryBudgets[catId] = newBudget;
+                saveCategoryBudgetsToLocalStorage();
+                render();
+            } else if (newBudgetStr.trim() === '') {
+                // Clear budget if empty
+                categoryBudgets[catId] = 0;
+                saveCategoryBudgetsToLocalStorage();
+                render();
+            }
         }
     });
 

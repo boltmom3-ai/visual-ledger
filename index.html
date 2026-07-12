@@ -80,66 +80,77 @@
 
         <!-- Main Content Area -->
         <main class="main-layout">
-            <!-- Left Panel: Transaction Input -->
-            <section class="form-section panel">
-                <h3 class="panel-title"><i class="fa-solid fa-pen-to-square"></i> Add Transaction</h3>
-                <form id="transaction-form" novalidate>
-                    <!-- Type Selector -->
-                    <div class="input-group">
-                        <label class="input-label">Type</label>
-                        <div class="type-selector-wrapper">
-                            <input type="radio" id="type-expense" name="type" value="expense" checked>
-                            <label for="type-expense" class="type-btn expense-btn-label">Expense</label>
-                            
-                            <input type="radio" id="type-income" name="type" value="income">
-                            <label for="type-income" class="type-btn income-btn-label">Income</label>
+            <!-- Left Column Wrapper: Form + Category Budgets -->
+            <div class="left-column-wrapper" style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+                <!-- Transaction Input -->
+                <section class="form-section panel">
+                    <h3 class="panel-title"><i class="fa-solid fa-pen-to-square"></i> Add Transaction</h3>
+                    <form id="transaction-form" novalidate>
+                        <!-- Type Selector -->
+                        <div class="input-group">
+                            <label class="input-label">Type</label>
+                            <div class="type-selector-wrapper">
+                                <input type="radio" id="type-expense" name="type" value="expense" checked>
+                                <label for="type-expense" class="type-btn expense-btn-label">Expense</label>
+                                
+                                <input type="radio" id="type-income" name="type" value="income">
+                                <label for="type-income" class="type-btn income-btn-label">Income</label>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Date Input -->
-                    <div class="input-group">
-                        <label for="transaction-date" class="input-label">Date</label>
-                        <div class="field-container">
-                            <i class="fa-regular fa-calendar field-icon"></i>
-                            <input type="date" id="transaction-date" required>
+                        <!-- Date Input -->
+                        <div class="input-group">
+                            <label for="transaction-date" class="input-label">Date</label>
+                            <div class="field-container">
+                                <i class="fa-regular fa-calendar field-icon"></i>
+                                <input type="date" id="transaction-date" required>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Category Input -->
-                    <div class="input-group">
-                        <label for="transaction-category" class="input-label">Category</label>
-                        <div class="field-container">
-                            <i class="fa-solid fa-tags field-icon"></i>
-                            <select id="transaction-category" required>
-                                <!-- Categories dynamically loaded based on type -->
-                            </select>
+                        <!-- Category Input -->
+                        <div class="input-group">
+                            <label for="transaction-category" class="input-label">Category</label>
+                            <div class="field-container">
+                                <i class="fa-solid fa-tags field-icon"></i>
+                                <select id="transaction-category" required>
+                                    <!-- Categories dynamically loaded based on type -->
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Amount Input -->
-                    <div class="input-group">
-                        <label for="transaction-amount" class="input-label">Amount (KRW)</label>
-                        <div class="field-container">
-                            <i class="fa-solid fa-won-sign field-icon"></i>
-                            <input type="number" id="transaction-amount" placeholder="Enter amount" min="1" required>
+                        <!-- Amount Input -->
+                        <div class="input-group">
+                            <label for="transaction-amount" class="input-label">Amount (KRW)</label>
+                            <div class="field-container">
+                                <i class="fa-solid fa-won-sign field-icon"></i>
+                                <input type="number" id="transaction-amount" placeholder="Enter amount" min="1" required>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Description Input -->
-                    <div class="input-group">
-                        <label for="transaction-desc" class="input-label">Description</label>
-                        <div class="field-container">
-                            <i class="fa-solid fa-align-left field-icon"></i>
-                            <input type="text" id="transaction-desc" placeholder="e.g. Grocery shopping" required>
+                        <!-- Description Input -->
+                        <div class="input-group">
+                            <label for="transaction-desc" class="input-label">Description</label>
+                            <div class="field-container">
+                                <i class="fa-solid fa-align-left field-icon"></i>
+                                <input type="text" id="transaction-desc" placeholder="e.g. Grocery shopping" required>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="submit-btn">
-                        <i class="fa-solid fa-plus"></i> Add Record
-                    </button>
-                </form>
-            </section>
+                        <!-- Submit Button -->
+                        <button type="submit" class="submit-btn">
+                            <i class="fa-solid fa-plus"></i> Add Record
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Category Budgets Section -->
+                <section class="category-budgets-section panel">
+                    <h3 class="panel-title"><i class="fa-solid fa-sliders"></i> Category Budgets</h3>
+                    <div class="category-budgets-list" id="category-budgets-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 380px; overflow-y: auto; padding-right: 0.5rem;">
+                        <!-- Category budgets loaded dynamically -->
+                    </div>
+                </section>
+            </div>
 
             <!-- Middle/Right Panel: Statistics & Charts -->
             <section class="charts-section panel">
