@@ -36,14 +36,17 @@ const DEFAULT_CATEGORIES = {
         { id: 'income-etc', name: 'Miscellaneous', icon: 'fa-coins', color: '#a7f3d0' }
     ],
     expense: [
-        { id: 'food', name: 'Food', icon: 'fa-utensils', color: '#ef4444' },
-        { id: 'transport', name: 'Transportation', icon: 'fa-bus', color: '#f97316' },
-        { id: 'shopping', name: 'Shopping', icon: 'fa-bag-shopping', color: '#ec4899' },
-        { id: 'housing', name: 'Housing & Utilities', icon: 'fa-house', color: '#3b82f6' },
-        { id: 'medical', name: 'Medical & Health', icon: 'fa-heart-pulse', color: '#06b6d4' },
-        { id: 'education', name: 'Education', icon: 'fa-graduation-cap', color: '#8b5cf6' },
-        { id: 'culture', name: 'Entertainment', icon: 'fa-film', color: '#a855f7' },
-        { id: 'expense-etc', name: 'Miscellaneous', icon: 'fa-receipt', color: '#64748b' }
+        { id: 'auto', name: 'Auto', icon: 'fa-car', color: '#3b82f6' },
+        { id: 'boys', name: 'Boys', icon: 'fa-child', color: '#f43f5e' },
+        { id: 'groceries', name: 'Groceries', icon: 'fa-basket-shopping', color: '#10b981' },
+        { id: 'medical', name: 'Medical', icon: 'fa-kit-medical', color: '#06b6d4' },
+        { id: 'restaurants', name: 'Restaurants', icon: 'fa-utensils', color: '#ef4444' },
+        { id: 'travel', name: 'Travel', icon: 'fa-plane', color: '#8b5cf6' },
+        { id: 'insurance', name: 'Insurance', icon: 'fa-shield-halved', color: '#14b8a6' },
+        { id: 'mortgage', name: 'Mortgage', icon: 'fa-landmark', color: '#eab308' },
+        { id: 'utilities', name: 'Utilities', icon: 'fa-bolt', color: '#f97316' },
+        { id: 'reserve', name: 'Reserve', icon: 'fa-piggy-bank', color: '#ec4899' },
+        { id: 'miscellaneous', name: 'Miscellaneous', icon: 'fa-receipt', color: '#64748b' }
     ]
 };
 
@@ -127,14 +130,17 @@ function loadData() {
             } else {
                 // Initialize default budgets in Firestore
                 categoryBudgets = {
-                    food: 500000,
-                    transport: 100000,
-                    shopping: 300000,
-                    housing: 300000,
+                    auto: 250000,
+                    boys: 300000,
+                    groceries: 600000,
                     medical: 150000,
-                    education: 200000,
-                    culture: 150000,
-                    'expense-etc': 100000
+                    restaurants: 400000,
+                    travel: 300000,
+                    insurance: 200000,
+                    mortgage: 800000,
+                    utilities: 250000,
+                    reserve: 200000,
+                    miscellaneous: 150000
                 };
                 db.collection("settings").doc("budgets").set(categoryBudgets);
             }
@@ -168,14 +174,14 @@ function loadLocalStorageOnly() {
         transactions = [
             { id: 'seed-1', type: 'income', date: new Date(today.getFullYear(), today.getMonth(), 5), category: 'salary', amount: 3500000, desc: 'Monthly Salary' },
             { id: 'seed-2', type: 'income', date: new Date(today.getFullYear(), today.getMonth(), 15), category: 'side-hustle', amount: 450000, desc: 'Freelance Design Work' },
-            { id: 'seed-3', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 2), category: 'housing', amount: 450000, desc: 'Monthly Studio Rent' },
-            { id: 'seed-4', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 3), category: 'food', amount: 120000, desc: 'Weekly Grocery Shopping' },
-            { id: 'seed-5', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 5), category: 'transport', amount: 45000, desc: 'Subway Pass Refill' },
-            { id: 'seed-6', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 6), category: 'shopping', amount: 95000, desc: 'Running Shoes' },
-            { id: 'seed-7', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 8), category: 'food', amount: 85000, desc: 'Dinner with Team' },
-            { id: 'seed-8', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 10), category: 'culture', amount: 28000, desc: 'Cinema Tickets' },
+            { id: 'seed-3', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 2), category: 'mortgage', amount: 450000, desc: 'Monthly Studio Rent' },
+            { id: 'seed-4', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 3), category: 'groceries', amount: 120000, desc: 'Weekly Grocery Shopping' },
+            { id: 'seed-5', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 5), category: 'auto', amount: 45000, desc: 'Gasoline Refuel' },
+            { id: 'seed-6', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 6), category: 'miscellaneous', amount: 95000, desc: 'Running Shoes' },
+            { id: 'seed-7', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 8), category: 'restaurants', amount: 85000, desc: 'Dinner with Team' },
+            { id: 'seed-8', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 10), category: 'travel', amount: 280000, desc: 'Weekend Hotel Booking' },
             { id: 'seed-9', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 12), category: 'medical', amount: 12000, desc: 'Cold Medicine' },
-            { id: 'seed-10', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 14), category: 'expense-etc', amount: 55000, desc: 'Coffee Shop Study Sessions' }
+            { id: 'seed-10', type: 'expense', date: new Date(today.getFullYear(), today.getMonth(), 14), category: 'utilities', amount: 55000, desc: 'Internet & Electricity' }
         ];
         saveLocalStorageOnly();
     }
@@ -190,14 +196,17 @@ function loadLocalStorageOnly() {
         }
     } else {
         categoryBudgets = {
-            food: 500000,
-            transport: 100000,
-            shopping: 300000,
-            housing: 300000,
+            auto: 250000,
+            boys: 300000,
+            groceries: 600000,
             medical: 150000,
-            education: 200000,
-            culture: 150000,
-            'expense-etc': 100000
+            restaurants: 400000,
+            travel: 300000,
+            insurance: 200000,
+            mortgage: 800000,
+            utilities: 250000,
+            reserve: 200000,
+            miscellaneous: 150000
         };
         saveCategoryBudgetsToLocalStorageOnly();
     }
